@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Questionário de Perfil</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+    background: #f7f8fa;
+    color: #222;
+  }
+
+  h1 {
+    font-size: clamp(1.2rem, 4vw, 1.7rem);
+    margin-bottom: 24px;
+    color: #0073bb;
+  }
+
+  /* ── Questão ── */
+  .questao {
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    padding: 18px 16px 14px;
+    margin-bottom: 20px;
+  }
+
+  .questao h3 {
+    font-size: clamp(0.95rem, 3vw, 1.05rem);
+    margin: 0 0 10px;
+    color: #111;
+  }
+
+  /* ── Mini legenda dentro de cada questão ── */
+  .mini-legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 0.78rem;
+    color: #555;
+    background: #f0f4f8;
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin-bottom: 14px;
+  }
+  .mini-legenda span { white-space: nowrap; }
+  .mini-legenda b { color: #0073bb; }
+
+  /* ── Opção ── */
+  .opcao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 4px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .opcao:last-child { border-bottom: none; }
+
+  .opcao-texto {
+    flex: 1;
+    font-size: clamp(0.88rem, 2.5vw, 0.97rem);
+    line-height: 1.4;
+  }
+
+  /* ── Botões de valor ── */
+  .radios {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .radios label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 32px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1.5px solid #c5cdd6;
+    background: #fff;
+    color: #444;
+    transition: background 0.12s, border-color 0.12s, color 0.12s, opacity 0.12s;
+    user-select: none;
+  }
+
+  .radios label:hover:not(.disabled) {
+    background: #deeeff;
+    border-color: #0073bb;
+    color: #0073bb;
+  }
+
+  .radios label.selected {
+    background: #0073bb;
+    border-color: #0073bb;
+    color: #fff;
+  }
+
+  .radios label.disabled {
+    opacity: 0.28;
+    pointer-events: none;
+  }
+
+  .radios input[type=radio] { display: none; }
+
+  /* ── Botão enviar ── */
+  .btn-resultado {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 8px auto 0;
+    padding: 13px;
+    font-size: 1rem;
+    font-weight: bold;
+    background: #0073bb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn-resultado:hover:not(:disabled) { background: #005f99; }
+  .btn-resultado:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .msg-progresso {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 0.88rem;
+    color: #2e7d32;
+  }
+
+  /* ── Resultado ── */
+  #resultado {
+    display: none;
+    margin-top: 28px;
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    padding: 20px 16px;
+  }
+
+  #resultado h2 {
+    margin: 0 0 14px;
+    font-size: 1.2rem;
+    color: #0073bb;
+  }
+
+  .totais {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .total-card {
+    background: #f0f7ff;
+    border: 1px solid #b3d4f0;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .total-card .nome {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #0073bb;
+    margin-bottom: 6px;
+  }
+
+  .total-card .valor {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #222;
+  }
+
+  .total-card {
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .total-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+  .total-card.destaque {
+    background: #0073bb;
+    border-color: #005f99;
+    box-shadow: 0 4px 16px rgba(0,115,187,0.3);
+  }
+  .total-card.destaque .nome,
+  .total-card.destaque .valor { color: #fff; }
+
+  .total-card.ativo { outline: 3px solid #f9a825; }
+
+  .dica-cards {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #888;
+    margin: 4px 0 14px;
+  }
+
+  .descricao-sistema {
+    background: #f0f4f8;
+    border-left: 4px solid #0073bb;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .descricao-sistema h4 { margin: 0 0 8px; color: #0073bb; font-size: 0.95rem; }
+
+  .predominante {
+    background: #f1f8f1;
+    border: 1px solid #4caf50;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-size: 0.92rem;
+    color: #1b5e20;
+  }
+  .predominante strong { color: #2e7d32; }
+
+  /* ── Cards de perfil ── */
+  .perfil-card {
+    border: 1px solid #dde3ea;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    background: #fafcff;
+  }
+
+  .perfil-card h3 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    color: #0073bb;
+  }
+
+  .perfil-card p {
+    margin: 0 0 8px;
+    font-size: 0.88rem;
+    color: #444;
+    line-height: 1.5;
+  }
+
+  .perfil-card ul {
+    margin: 0;
+    padding-left: 16px;
+  }
+
+  .perfil-card li {
+    font-size: 0.85rem;
+    margin: 4px 0;
+    line-height: 1.45;
+  }
+
+  .tag-forte { color: #2e7d32; font-weight: bold; }
+  .tag-fraco  { color: #c62828; font-weight: bold; }
+
+  .lang-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .lang-selector a {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1.5px solid #c5cdd6;
+    background: #fff;
+    color: #444;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+
+  .lang-selector a:hover { background: #deeeff; border-color: #0073bb; color: #0073bb; }
+  .lang-selector a.active { background: #0073bb; border-color: #0073bb; color: #fff; }
+
+  /* ── Responsivo pequeno ── */
+  @media (max-width: 480px) {
+    .radios label { width: 32px; height: 30px; font-size: 0.82rem; }
+    .opcao { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="lang-selector">
+  <a href="questoes.html" class="active">🇧🇷 Português</a>
+  <a href="questoes_en.html">🇬🇧 English</a>
+  <a href="questoes_nl.html">🇳🇱 Nederlands</a>
+</div>
+
+<h1>Descubra seu Sistema Representacional</h1>
+
+<form id="form">
+
+  <div class="questao" data-q="1">
+    <h3>1. Eu tomo decisões importantes baseado em:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = melhor descreve você</span>
+      <span><b>3</b> = próxima melhor descrição</span>
+      <span><b>2</b> = próxima melhor</span>
+      <span><b>1</b> = menos descreve você</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q1_C"></div><span class="opcao-texto">intuição</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_A"></div><span class="opcao-texto">o que me soa melhor</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_V"></div><span class="opcao-texto">o que me parece melhor</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_D"></div><span class="opcao-texto">um estudo preciso e minucioso do assunto</span></div>
+  </div>
+
+  <div class="questao" data-q="2">
+    <h3>2. Durante uma discussão sou mais influenciado por:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = melhor descreve você</span>
+      <span><b>3</b> = próxima melhor descrição</span>
+      <span><b>2</b> = próxima melhor</span>
+      <span><b>1</b> = menos descreve você</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q2_A"></div><span class="opcao-texto">tom de voz da outra pessoa</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_V"></div><span class="opcao-texto">se eu posso ou não ver o argumento da outra pessoa</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_D"></div><span class="opcao-texto">lógica do argumento da outra pessoa</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_C"></div><span class="opcao-texto">se eu entro em contato ou não com os sentimentos reais do outro</span></div>
+  </div>
+
+  <div class="questao" data-q="3">
+    <h3>3. Eu comunico mais facilmente o que se passa comigo:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = melhor descreve você</span>
+      <span><b>3</b> = próxima melhor descrição</span>
+      <span><b>2</b> = próxima melhor</span>
+      <span><b>1</b> = menos descreve você</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q3_V"></div><span class="opcao-texto">do modo como me visto e apareço</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_C"></div><span class="opcao-texto">pelos sentimentos que compartilho</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_D"></div><span class="opcao-texto">pelas palavras que escolho</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_A"></div><span class="opcao-texto">pelo tom da minha voz</span></div>
+  </div>
+
+  <div class="questao" data-q="4">
+    <h3>4. É muito fácil para mim:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = melhor descreve você</span>
+      <span><b>3</b> = próxima melhor descrição</span>
+      <span><b>2</b> = próxima melhor</span>
+      <span><b>1</b> = menos descreve você</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q4_A"></div><span class="opcao-texto">achar o volume e a sintonia ideais num sistema de som</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_D"></div><span class="opcao-texto">selecionar o ponto mais relevante relativo a um assunto interessante</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_C"></div><span class="opcao-texto">escolher os móveis mais confortáveis</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_V"></div><span class="opcao-texto">escolher as combinações de cores mais ricas e atraentes</span></div>
+  </div>
+
+  <div class="questao" data-q="5">
+    <h3>5. Eu me percebo assim:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = melhor descreve você</span>
+      <span><b>3</b> = próxima melhor descrição</span>
+      <span><b>2</b> = próxima melhor</span>
+      <span><b>1</b> = menos descreve você</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q5_A"></div><span class="opcao-texto">se estou muito em sintonia com os sons do ambiente</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_D"></div><span class="opcao-texto">se sou muito capaz de raciocinar com fatos e dados novos</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_C"></div><span class="opcao-texto">sou muito sensível à maneira como a roupa veste no meu corpo</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_V"></div><span class="opcao-texto">respondo fortemente às cores e à aparência de uma sala</span></div>
+  </div>
+
+  <button type="button" class="btn-resultado" id="btnAcao" onclick="verResultado()" disabled>Ver Resultado</button>
+  <div id="erroMsg" class="msg-progresso">Responda todas as questões para ver o resultado</div>
+
+</form>
+
+<div id="resultado">
+  <h2>Resultado</h2>
+  <div id="msgPredominante" class="predominante" style="display:none"></div>
+  <div class="totais">
+    <div class="total-card" id="card-C" onclick="mostrarDescricao('C')"><div class="nome">Cinestésico</div><div class="valor" id="totalC">—</div></div>
+    <div class="total-card" id="card-A" onclick="mostrarDescricao('A')"><div class="nome">Auditivo</div><div class="valor" id="totalA">—</div></div>
+    <div class="total-card" id="card-V" onclick="mostrarDescricao('V')"><div class="nome">Visual</div><div class="valor" id="totalV">—</div></div>
+    <div class="total-card" id="card-D" onclick="mostrarDescricao('D')"><div class="nome">Digital</div><div class="valor" id="totalD">—</div></div>
+  </div>
+  <p class="dica-cards">Clique nos cards para ver a característica de cada sistema</p>
+  <div id="descricao-sistema" class="descricao-sistema" style="display:none"></div>
+</div>
+
+<script>
+const grupos = [
+  ['q1_C','q1_A','q1_V','q1_D'],
+  ['q2_A','q2_V','q2_D','q2_C'],
+  ['q3_V','q3_C','q3_D','q3_A'],
+  ['q4_A','q4_D','q4_C','q4_V'],
+  ['q5_A','q5_D','q5_C','q5_V']
+];
+
+const usados = { 0: new Set(), 1: new Set(), 2: new Set(), 3: new Set(), 4: new Set() };
+
+function buildRadios() {
+  document.querySelectorAll('.radios[data-name]').forEach(container => {
+    const name = container.dataset.name;
+    const qIdx = grupos.findIndex(g => g.includes(name));
+    [4, 3, 2, 1].forEach(val => {
+      const lbl = document.createElement('label');
+      lbl.dataset.val = val;
+      const inp = document.createElement('input');
+      inp.type = 'radio'; inp.name = name; inp.value = val;
+      lbl.addEventListener('click', e => { e.preventDefault(); onSelect(name, val, qIdx, lbl); });
+      lbl.appendChild(inp);
+      lbl.appendChild(document.createTextNode(val));
+      container.appendChild(lbl);
+    });
+  });
+}
+
+function onSelect(name, val, qIdx, selectedLbl) {
+  const inp = selectedLbl.querySelector('input');
+  const rowLabels = selectedLbl.parentElement.querySelectorAll('label');
+
+  if (inp.checked) {
+    inp.checked = false;
+    selectedLbl.classList.remove('selected');
+    usados[qIdx].delete(val);
+    updateDisabled(qIdx);
+    checkProgresso();
+    return;
+  }
+
+  rowLabels.forEach(lbl => {
+    if (lbl.classList.contains('selected')) {
+      usados[qIdx].delete(parseInt(lbl.dataset.val));
+      lbl.classList.remove('selected');
+      lbl.querySelector('input').checked = false;
+    }
+  });
+
+  inp.checked = true;
+  selectedLbl.classList.add('selected');
+  usados[qIdx].add(val);
+  updateDisabled(qIdx);
+  checkProgresso();
+}
+
+function updateDisabled(qIdx) {
+  grupos[qIdx].forEach(name => {
+    document.querySelector(`.radios[data-name="${name}"]`).querySelectorAll('label').forEach(lbl => {
+      const v = parseInt(lbl.dataset.val);
+      const checked = lbl.querySelector('input').checked;
+      lbl.classList.toggle('disabled', usados[qIdx].has(v) && !checked);
+    });
+  });
+}
+
+function verResultado() {
+  const erroEl = document.getElementById('erroMsg');
+  erroEl.textContent = '';
+  for (let i = 0; i < grupos.length; i++) {
+    for (const name of grupos[i]) {
+      if (!document.querySelector(`input[name="${name}"]:checked`)) {
+        erroEl.textContent = `Por favor, responda todas as opções da questão ${i + 1}.`;
+        return;
+      }
+    }
+  }
+  const totais = { C: 0, A: 0, V: 0, D: 0 };
+  for (const grupo of grupos) {
+    for (const name of grupo) {
+      const letra = name.split('_')[1];
+      totais[letra] += parseInt(document.querySelector(`input[name="${name}"]:checked`).value);
+    }
+  }
+  const nomes = { C: 'Cinestésico', A: 'Auditivo', V: 'Visual', D: 'Digital' };
+  const maxVal = Math.max(...Object.values(totais));
+
+  document.querySelectorAll('.total-card').forEach(c => c.classList.remove('destaque'));
+  ['C','A','V','D'].forEach(l => {
+    const pct = totais[l] * 2;
+    document.getElementById('total'+l).textContent = pct + '%';
+    if (totais[l] === maxVal) document.getElementById('card-'+l).classList.add('destaque');
+  });
+
+  // Mensagem predominante
+  const predominantes = ['C','A','V','D'].filter(l => totais[l] === maxVal);
+  const nomesPredom = predominantes.map(l => nomes[l]);
+  const msg = document.getElementById('msgPredominante');
+  const verbo = predominantes.length > 1 ? 'são os sistemas predominantes' : 'é o sistema predominante';
+  msg.innerHTML = '<strong>' + nomesPredom.join(' e ') + '</strong> ' + verbo + '.';
+  msg.style.display = 'block';
+
+  // Mostrar descrição do(s) predominante(s)
+  mostrarDescricao(predominantes[0]);
+
+  // Bloquear todas as interações
+  document.querySelectorAll('.radios label').forEach(lbl => {
+    lbl.style.pointerEvents = 'none';
+    if (!lbl.classList.contains('selected')) lbl.classList.add('disabled');
+  });
+
+  // Trocar botão
+  const btn = document.getElementById('btnAcao');
+  btn.disabled = false;
+  btn.textContent = 'Refazer Teste';
+  btn.onclick = refazerTeste;
+
+  const res = document.getElementById('resultado');
+  res.style.display = 'block';
+  res.scrollIntoView({ behavior: 'smooth' });
+}
+
+function refazerTeste() {
+  // Limpar seleções e reabilitar interações
+  document.querySelectorAll('.radios label').forEach(lbl => {
+    lbl.classList.remove('selected', 'disabled');
+    lbl.style.pointerEvents = '';
+    lbl.querySelector('input').checked = false;
+  });
+  [0,1,2,3,4].forEach(i => usados[i].clear());
+
+  // Resetar resultado
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('msgPredominante').style.display = 'none';
+  ['C','A','V','D'].forEach(l => {
+    document.getElementById('total'+l).textContent = '—';
+    document.getElementById('card-'+l).classList.remove('destaque');
+  });
+  document.getElementById('erroMsg').textContent = 'Responda todas as questões para ver o resultado';
+  document.getElementById('descricao-sistema').style.display = 'none';
+
+  // Restaurar botão
+  const btn = document.getElementById('btnAcao');
+  btn.textContent = 'Ver Resultado';
+  btn.disabled = true;
+  btn.onclick = verResultado;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+const descricoes = {
+  V: '<h4>Visual</h4>Percebem as coisas como imagens e podem passar de um tema a outro facilmente. São capazes de fazer generalizações rapidamente inclusive partindo de uma informação escassa. Para as pessoas visuais, o mais importante é o "conceito geral" e podem aborrecer com as explicações detalhadas. Se dão bem em organizar as coisas já que visualizam o conceito geral rapidamente. As pessoas visuais gesticulam quando falam, falam rápido e de maneira confusa já que tendem a seguir suas imagens interiores sem dar-se conta de que outros não vêem essa mesma imagem. Respondem brevemente às perguntas. As pessoas visuais têm memória fotográfica e frequentemente custam a repetir instruções orais. Preferem ler por eles mesmos que escutar a outra pessoa que as lê. As pessoas visuais podem ter problemas para debater e são um público impaciente. Gostam de escrever notas ou desenhar. As pessoas visuais se fixam no aspecto e valorizam o esmero.',
+  C: '<h4>Cinestésico</h4>Percebem as coisas através do corpo e da experimentação. São muito intuitivos e valorizam especialmente o ambiente e a participação. Para pensar com clareza necessitam de movimento e atividade. Não concedem importância à ordem das coisas. As pessoas cinestésicas se mostram relaxadas ao falar, se movem e gesticulam. Falam devagar e sabem como utilizar as pausas. Como público, são impacientes porque preferem passar à ação. As pessoas cinestésicas preferem as atividades e o movimento e emprestam atenção ao desenvolvimento das mesmas. Do mesmo modo, requerem seu tempo para analisar o que se sente fazendo as coisas. As pessoas cinestésicas gostam de tocar e aproximar-se de outros. Percebem facilmente o ambiente e o mobiliário incômodo assim como o frio e o calor. Ao falar, as pessoas cinestésicas não mantêm um grande contato visual com outros. Para descrever o que têm feito se concentram na ação. Aprendem melhor fazendo as coisas e recordando a sensação e a ação. Ocasionalmente caminham e gesticulam para recordar as coisas.',
+  A: '<h4>Auditivo</h4>Gostam de escutar e contar histórias, seguem um procedimento lógico ao longo de cada história e se concentram em uma só coisa de uma vez. Não gostam que os temas sejam tratados de forma desordenada. Pessoas auditivas possuem um vocabulário amplo, se expressam com clareza e não gesticulam muito ao falar. As pessoas auditivas têm um discurso próprio: ouvem uma pergunta, repetem na cabeça e a respondem antes de responder em voz alta. Isto pode incomodar as pessoas visuais e cinestésicas que tendem a ser mais rápidas. As pessoas auditivas aprendem escutando e prestam atenção à ênfase, às pausas e ao tom da voz. Uma pessoa auditiva desfruta do silêncio.',
+  D: '<h4>Digital</h4>São pessoas que estão se mexendo, conversando, e ao mesmo tempo, conversando consigo mesmo. Têm tendência a realizarem constantemente a autoanálise e a ponderar consequências para cada decisão. Têm dificuldade em ler textos ou livros por um longo período de tempo e quando conseguem estão o tempo inteiro pensando no que farão no minuto seguinte. Quando começa a prestar atenção nos sinais, percebe que o auditivo digital está ouvindo e entendendo, mas ao mesmo tempo seu olhar se distancia em dados momentos. Em alguns momentos fica em silêncio durante a negociação.'
+};
+
+function mostrarDescricao(letra) {
+  document.querySelectorAll('.total-card').forEach(c => c.classList.remove('ativo'));
+  document.getElementById('card-' + letra).classList.add('ativo');
+  const el = document.getElementById('descricao-sistema');
+  el.innerHTML = descricoes[letra];
+  el.style.display = 'block';
+}
+
+function checkProgresso() {
+  const total = grupos.flat().length;
+  const respondidas = grupos.flat().filter(name => document.querySelector(`input[name="${name}"]:checked`)).length;
+  document.getElementById('btnAcao').disabled = respondidas < total;
+  document.getElementById('erroMsg').textContent = respondidas < total
+    ? 'Responda todas as questões para ver o resultado'
+    : '';
+}
+
+buildRadios();
+</script>
+</body>
+</html>

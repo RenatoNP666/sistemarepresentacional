@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profielvragenlijst</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+    background: #f7f8fa;
+    color: #222;
+  }
+
+  h1 {
+    font-size: clamp(1.2rem, 4vw, 1.7rem);
+    margin-bottom: 24px;
+    color: #0073bb;
+  }
+
+  .lang-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .lang-selector a {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1.5px solid #c5cdd6;
+    background: #fff;
+    color: #444;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+
+  .lang-selector a:hover { background: #deeeff; border-color: #0073bb; color: #0073bb; }
+  .lang-selector a.active { background: #0073bb; border-color: #0073bb; color: #fff; }
+
+  .questao {
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    padding: 18px 16px 14px;
+    margin-bottom: 20px;
+  }
+
+  .questao h3 {
+    font-size: clamp(0.95rem, 3vw, 1.05rem);
+    margin: 0 0 10px;
+    color: #111;
+  }
+
+  .mini-legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 0.78rem;
+    color: #555;
+    background: #f0f4f8;
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin-bottom: 14px;
+  }
+  .mini-legenda span { white-space: nowrap; }
+  .mini-legenda b { color: #0073bb; }
+
+  .opcao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 4px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .opcao:last-child { border-bottom: none; }
+
+  .opcao-texto {
+    flex: 1;
+    font-size: clamp(0.88rem, 2.5vw, 0.97rem);
+    line-height: 1.4;
+  }
+
+  .radios {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .radios label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 32px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1.5px solid #c5cdd6;
+    background: #fff;
+    color: #444;
+    transition: background 0.12s, border-color 0.12s, color 0.12s, opacity 0.12s;
+    user-select: none;
+  }
+
+  .radios label:hover:not(.disabled) { background: #deeeff; border-color: #0073bb; color: #0073bb; }
+  .radios label.selected { background: #0073bb; border-color: #0073bb; color: #fff; }
+  .radios label.disabled { opacity: 0.28; pointer-events: none; }
+  .radios input[type=radio] { display: none; }
+
+  .btn-resultado {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 8px auto 0;
+    padding: 13px;
+    font-size: 1rem;
+    font-weight: bold;
+    background: #0073bb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn-resultado:hover:not(:disabled) { background: #005f99; }
+  .btn-resultado:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .msg-progresso {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 0.88rem;
+    color: #2e7d32;
+  }
+
+  #resultado {
+    display: none;
+    margin-top: 28px;
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    padding: 20px 16px;
+  }
+
+  #resultado h2 { margin: 0 0 14px; font-size: 1.2rem; color: #0073bb; }
+
+  .totais {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .total-card {
+    background: #f0f7ff;
+    border: 1px solid #b3d4f0;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .total-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .total-card .nome { font-size: 0.85rem; font-weight: bold; color: #0073bb; margin-bottom: 6px; }
+  .total-card .valor { font-size: 2rem; font-weight: bold; color: #222; }
+  .total-card.destaque { background: #0073bb; border-color: #005f99; box-shadow: 0 4px 16px rgba(0,115,187,0.3); }
+  .total-card.destaque .nome, .total-card.destaque .valor { color: #fff; }
+  .total-card.ativo { outline: 3px solid #f9a825; }
+
+  .dica-cards { text-align: center; font-size: 0.8rem; color: #888; margin: 4px 0 14px; }
+
+  .descricao-sistema {
+    background: #f0f4f8;
+    border-left: 4px solid #0073bb;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .descricao-sistema h4 { margin: 0 0 8px; color: #0073bb; font-size: 0.95rem; }
+
+  .predominante {
+    background: #f1f8f1;
+    border: 1px solid #4caf50;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-size: 0.92rem;
+    color: #1b5e20;
+  }
+  .predominante strong { color: #2e7d32; }
+
+  .perfil-card { border: 1px solid #dde3ea; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; background: #fafcff; }
+  .perfil-card h3 { margin: 0 0 6px; font-size: 1rem; color: #0073bb; }
+  .perfil-card p { margin: 0 0 8px; font-size: 0.88rem; color: #444; line-height: 1.5; }
+  .perfil-card ul { margin: 0; padding-left: 16px; }
+  .perfil-card li { font-size: 0.85rem; margin: 4px 0; line-height: 1.45; }
+
+  .tag-forte { color: #2e7d32; font-weight: bold; }
+  .tag-fraco  { color: #c62828; font-weight: bold; }
+
+  @media (max-width: 480px) {
+    .radios label { width: 32px; height: 30px; font-size: 0.82rem; }
+    .opcao { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="lang-selector">
+  <a href="questoes.html">🇧🇷 Português</a>
+  <a href="questoes_en.html">🇬🇧 English</a>
+  <a href="questoes_nl.html" class="active">🇳🇱 Nederlands</a>
+</div>
+
+<h1>Ontdek uw Representationeel Systeem</h1>
+
+<form id="form">
+
+  <div class="questao" data-q="1">
+    <h3>1. Ik neem belangrijke beslissingen op basis van:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = beschrijft u het best</span>
+      <span><b>3</b> = op één na beste beschrijving</span>
+      <span><b>2</b> = op één na beste</span>
+      <span><b>1</b> = beschrijft u het minst</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q1_C"></div><span class="opcao-texto">intuïtie</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_A"></div><span class="opcao-texto">wat het beste klinkt voor mij</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_V"></div><span class="opcao-texto">wat er het beste uitziet voor mij</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_D"></div><span class="opcao-texto">een nauwkeurige en grondige studie van het onderwerp</span></div>
+  </div>
+
+  <div class="questao" data-q="2">
+    <h3>2. Tijdens een discussie word ik het meest beïnvloed door:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = beschrijft u het best</span>
+      <span><b>3</b> = op één na beste beschrijving</span>
+      <span><b>2</b> = op één na beste</span>
+      <span><b>1</b> = beschrijft u het minst</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q2_A"></div><span class="opcao-texto">de toon van de stem van de andere persoon</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_V"></div><span class="opcao-texto">of ik het argument van de andere persoon al dan niet kan zien</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_D"></div><span class="opcao-texto">de logica van het argument van de andere persoon</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_C"></div><span class="opcao-texto">of ik al dan niet contact maak met de echte gevoelens van de ander</span></div>
+  </div>
+
+  <div class="questao" data-q="3">
+    <h3>3. Ik communiceer het gemakkelijkst wat er met mij gebeurt:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = beschrijft u het best</span>
+      <span><b>3</b> = op één na beste beschrijving</span>
+      <span><b>2</b> = op één na beste</span>
+      <span><b>1</b> = beschrijft u het minst</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q3_V"></div><span class="opcao-texto">door de manier waarop ik me kleed en verschijn</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_C"></div><span class="opcao-texto">door de gevoelens die ik deel</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_D"></div><span class="opcao-texto">door de woorden die ik kies</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_A"></div><span class="opcao-texto">door de toon van mijn stem</span></div>
+  </div>
+
+  <div class="questao" data-q="4">
+    <h3>4. Het is heel gemakkelijk voor mij om:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = beschrijft u het best</span>
+      <span><b>3</b> = op één na beste beschrijving</span>
+      <span><b>2</b> = op één na beste</span>
+      <span><b>1</b> = beschrijft u het minst</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q4_A"></div><span class="opcao-texto">het ideale volume en de afstemming op een geluidsinstallatie te vinden</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_D"></div><span class="opcao-texto">het meest relevante punt over een interessant onderwerp te selecteren</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_C"></div><span class="opcao-texto">het meest comfortabele meubilair te kiezen</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_V"></div><span class="opcao-texto">de rijkste en meest aantrekkelijke kleurencombinaties te kiezen</span></div>
+  </div>
+
+  <div class="questao" data-q="5">
+    <h3>5. Ik zie mezelf als:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = beschrijft u het best</span>
+      <span><b>3</b> = op één na beste beschrijving</span>
+      <span><b>2</b> = op één na beste</span>
+      <span><b>1</b> = beschrijft u het minst</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q5_A"></div><span class="opcao-texto">zeer afgestemd op de geluiden van de omgeving</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_D"></div><span class="opcao-texto">zeer in staat om te redeneren met nieuwe feiten en gegevens</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_C"></div><span class="opcao-texto">zeer gevoelig voor de manier waarop kleding op mijn lichaam past</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_V"></div><span class="opcao-texto">sterk reagerend op kleuren en het uiterlijk van een kamer</span></div>
+  </div>
+
+  <button type="button" class="btn-resultado" id="btnAcao" onclick="verResultado()" disabled>Resultaat bekijken</button>
+  <div id="erroMsg" class="msg-progresso">Beantwoord alle vragen om het resultaat te zien</div>
+
+</form>
+
+<div id="resultado">
+  <h2>Resultaat</h2>
+  <div id="msgPredominante" class="predominante" style="display:none"></div>
+  <div class="totais">
+    <div class="total-card" id="card-C" onclick="mostrarDescricao('C')"><div class="nome">Kinesthetisch</div><div class="valor" id="totalC">—</div></div>
+    <div class="total-card" id="card-A" onclick="mostrarDescricao('A')"><div class="nome">Auditief</div><div class="valor" id="totalA">—</div></div>
+    <div class="total-card" id="card-V" onclick="mostrarDescricao('V')"><div class="nome">Visueel</div><div class="valor" id="totalV">—</div></div>
+    <div class="total-card" id="card-D" onclick="mostrarDescricao('D')"><div class="nome">Digitaal</div><div class="valor" id="totalD">—</div></div>
+  </div>
+  <p class="dica-cards">Klik op de kaarten om de kenmerken van elk systeem te zien</p>
+  <div id="descricao-sistema" class="descricao-sistema" style="display:none"></div>
+</div>
+
+<script>
+const grupos = [
+  ['q1_C','q1_A','q1_V','q1_D'],
+  ['q2_A','q2_V','q2_D','q2_C'],
+  ['q3_V','q3_C','q3_D','q3_A'],
+  ['q4_A','q4_D','q4_C','q4_V'],
+  ['q5_A','q5_D','q5_C','q5_V']
+];
+
+const usados = { 0: new Set(), 1: new Set(), 2: new Set(), 3: new Set(), 4: new Set() };
+
+function buildRadios() {
+  document.querySelectorAll('.radios[data-name]').forEach(container => {
+    const name = container.dataset.name;
+    const qIdx = grupos.findIndex(g => g.includes(name));
+    [4, 3, 2, 1].forEach(val => {
+      const lbl = document.createElement('label');
+      lbl.dataset.val = val;
+      const inp = document.createElement('input');
+      inp.type = 'radio'; inp.name = name; inp.value = val;
+      lbl.addEventListener('click', e => { e.preventDefault(); onSelect(name, val, qIdx, lbl); });
+      lbl.appendChild(inp);
+      lbl.appendChild(document.createTextNode(val));
+      container.appendChild(lbl);
+    });
+  });
+}
+
+function onSelect(name, val, qIdx, selectedLbl) {
+  const inp = selectedLbl.querySelector('input');
+  const rowLabels = selectedLbl.parentElement.querySelectorAll('label');
+
+  if (inp.checked) {
+    inp.checked = false;
+    selectedLbl.classList.remove('selected');
+    usados[qIdx].delete(val);
+    updateDisabled(qIdx);
+    checkProgresso();
+    return;
+  }
+
+  rowLabels.forEach(lbl => {
+    if (lbl.classList.contains('selected')) {
+      usados[qIdx].delete(parseInt(lbl.dataset.val));
+      lbl.classList.remove('selected');
+      lbl.querySelector('input').checked = false;
+    }
+  });
+
+  inp.checked = true;
+  selectedLbl.classList.add('selected');
+  usados[qIdx].add(val);
+  updateDisabled(qIdx);
+  checkProgresso();
+}
+
+function updateDisabled(qIdx) {
+  grupos[qIdx].forEach(name => {
+    document.querySelector(`.radios[data-name="${name}"]`).querySelectorAll('label').forEach(lbl => {
+      const v = parseInt(lbl.dataset.val);
+      const checked = lbl.querySelector('input').checked;
+      lbl.classList.toggle('disabled', usados[qIdx].has(v) && !checked);
+    });
+  });
+}
+
+function verResultado() {
+  const erroEl = document.getElementById('erroMsg');
+  erroEl.textContent = '';
+  for (let i = 0; i < grupos.length; i++) {
+    for (const name of grupos[i]) {
+      if (!document.querySelector(`input[name="${name}"]:checked`)) {
+        erroEl.textContent = `Beantwoord alle opties van vraag ${i + 1}.`;
+        return;
+      }
+    }
+  }
+  const totais = { C: 0, A: 0, V: 0, D: 0 };
+  for (const grupo of grupos) {
+    for (const name of grupo) {
+      const letra = name.split('_')[1];
+      totais[letra] += parseInt(document.querySelector(`input[name="${name}"]:checked`).value);
+    }
+  }
+  const nomes = { C: 'Kinesthetisch', A: 'Auditief', V: 'Visueel', D: 'Digitaal' };
+  const maxVal = Math.max(...Object.values(totais));
+
+  document.querySelectorAll('.total-card').forEach(c => c.classList.remove('destaque'));
+  ['C','A','V','D'].forEach(l => {
+    const pct = totais[l] * 2;
+    document.getElementById('total'+l).textContent = pct + '%';
+    if (totais[l] === maxVal) document.getElementById('card-'+l).classList.add('destaque');
+  });
+
+  const predominantes = ['C','A','V','D'].filter(l => totais[l] === maxVal);
+  const nomesPredom = predominantes.map(l => nomes[l]);
+  const msg = document.getElementById('msgPredominante');
+  const verbo = predominantes.length > 1 ? 'zijn de overheersende systemen' : 'is het overheersende systeem';
+  msg.innerHTML = '<strong>' + nomesPredom.join(' en ') + '</strong> ' + verbo + '.';
+  msg.style.display = 'block';
+
+  mostrarDescricao(predominantes[0]);
+
+  document.querySelectorAll('.radios label').forEach(lbl => {
+    lbl.style.pointerEvents = 'none';
+    if (!lbl.classList.contains('selected')) lbl.classList.add('disabled');
+  });
+
+  const btn = document.getElementById('btnAcao');
+  btn.disabled = false;
+  btn.textContent = 'Test opnieuw doen';
+  btn.onclick = refazerTeste;
+
+  const res = document.getElementById('resultado');
+  res.style.display = 'block';
+  res.scrollIntoView({ behavior: 'smooth' });
+}
+
+function refazerTeste() {
+  document.querySelectorAll('.radios label').forEach(lbl => {
+    lbl.classList.remove('selected', 'disabled');
+    lbl.style.pointerEvents = '';
+    lbl.querySelector('input').checked = false;
+  });
+  [0,1,2,3,4].forEach(i => usados[i].clear());
+
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('msgPredominante').style.display = 'none';
+  ['C','A','V','D'].forEach(l => {
+    document.getElementById('total'+l).textContent = '—';
+    document.getElementById('card-'+l).classList.remove('destaque');
+  });
+  document.getElementById('erroMsg').textContent = 'Beantwoord alle vragen om het resultaat te zien';
+  document.getElementById('descricao-sistema').style.display = 'none';
+
+  const btn = document.getElementById('btnAcao');
+  btn.textContent = 'Resultaat bekijken';
+  btn.disabled = true;
+  btn.onclick = verResultado;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+const descricoes = {
+  V: '<h4>Visueel</h4>Ze nemen dingen waar als beelden en kunnen gemakkelijk van het ene onderwerp naar het andere gaan. Ze zijn in staat snel generalisaties te maken, zelfs op basis van schaarse informatie. Voor visuele mensen is het "algemene concept" het belangrijkste en ze kunnen verveeld raken door gedetailleerde uitleg. Ze zijn goed in het organiseren van dingen omdat ze het algemene concept snel visualiseren. Visuele mensen gebaren wanneer ze spreken, praten snel en op een enigszins verwarrende manier omdat ze de neiging hebben hun innerlijke beelden te volgen zonder te beseffen dat anderen hetzelfde beeld niet zien. Ze reageren kort op vragen. Visuele mensen hebben een fotografisch geheugen en hebben vaak moeite met het herhalen van mondelinge instructies. Ze lezen liever zelf dan dat ze naar iemand anders luisteren die voor hen leest. Visuele mensen kunnen moeite hebben met debatteren en zijn een ongeduldig publiek. Ze schrijven graag notities of tekenen. Visuele mensen letten op uiterlijk en waarderen netheid.',
+  C: '<h4>Kinesthetisch</h4>Ze nemen dingen waar via het lichaam en door experimenteren. Ze zijn zeer intuïtief en waarderen vooral de omgeving en participatie. Om helder te denken hebben ze beweging en activiteit nodig. Ze hechten geen belang aan de volgorde van dingen. Kinesthetische mensen lijken ontspannen wanneer ze spreken, bewegen en gebaren. Ze spreken langzaam en weten hoe ze pauzes moeten gebruiken. Als publiek zijn ze ongeduldig omdat ze liever overgaan tot actie. Kinesthetische mensen geven de voorkeur aan activiteiten en beweging en letten op de ontwikkeling ervan. Ze hebben ook tijd nodig om te analyseren hoe het voelt om dingen te doen. Kinesthetische mensen houden ervan anderen aan te raken en dicht bij hen te zijn. Ze merken gemakkelijk oncomfortabele omgevingen en meubilair op, evenals kou en warmte. Kinesthetische mensen houden bij het spreken geen groot oogcontact met anderen. Om te beschrijven wat ze hebben gedaan, concentreren ze zich op de actie. Ze leren het beste door dingen te doen en het gevoel en de actie te onthouden. Ze lopen en gebaren soms om dingen te herinneren.',
+  A: '<h4>Auditief</h4>Ze luisteren graag en vertellen verhalen, volgen een logische procedure door elk verhaal en concentreren zich op één ding tegelijk. Ze houden er niet van dat onderwerpen op een ongeorganiseerde manier worden behandeld. Auditieve mensen hebben een uitgebreide woordenschat, drukken zich duidelijk uit en gebaren niet veel bij het spreken. Auditieve mensen hebben hun eigen manier van spreken: ze horen een vraag, herhalen die in hun hoofd en beantwoorden die voordat ze hardop antwoorden. Dit kan visuele en kinesthetische mensen storen die de neiging hebben sneller te zijn. Auditieve mensen leren door te luisteren en letten op nadruk, pauzes en toon van de stem. Een auditief persoon geniet van stilte.',
+  D: '<h4>Digitaal</h4>Dit zijn mensen die bewegen, praten en tegelijkertijd met zichzelf praten. Ze hebben de neiging voortdurend zelfanalyse te doen en de gevolgen van elke beslissing af te wegen. Ze hebben moeite om gedurende een lange periode teksten of boeken te lezen en als ze dat toch doen, denken ze de hele tijd na over wat ze de volgende minuut zullen doen. Wanneer je begint te letten op de signalen, merk je dat de digitale auditieve luistert en begrijpt, maar tegelijkertijd dwaalt zijn blik op bepaalde momenten af. Op sommige momenten blijven ze stil tijdens de onderhandeling.'
+};
+
+function mostrarDescricao(letra) {
+  document.querySelectorAll('.total-card').forEach(c => c.classList.remove('ativo'));
+  document.getElementById('card-' + letra).classList.add('ativo');
+  const el = document.getElementById('descricao-sistema');
+  el.innerHTML = descricoes[letra];
+  el.style.display = 'block';
+}
+
+function checkProgresso() {
+  const total = grupos.flat().length;
+  const respondidas = grupos.flat().filter(name => document.querySelector(`input[name="${name}"]:checked`)).length;
+  document.getElementById('btnAcao').disabled = respondidas < total;
+  document.getElementById('erroMsg').textContent = respondidas < total
+    ? 'Beantwoord alle vragen om het resultaat te zien'
+    : '';
+}
+
+buildRadios();
+</script>
+</body>
+</html>

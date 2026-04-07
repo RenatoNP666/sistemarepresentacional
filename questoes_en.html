@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile Questionnaire</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+    background: #f7f8fa;
+    color: #222;
+  }
+
+  h1 {
+    font-size: clamp(1.2rem, 4vw, 1.7rem);
+    margin-bottom: 24px;
+    color: #0073bb;
+  }
+
+  .lang-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .lang-selector a {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1.5px solid #c5cdd6;
+    background: #fff;
+    color: #444;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+
+  .lang-selector a:hover { background: #deeeff; border-color: #0073bb; color: #0073bb; }
+  .lang-selector a.active { background: #0073bb; border-color: #0073bb; color: #fff; }
+
+  .questao {
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    padding: 18px 16px 14px;
+    margin-bottom: 20px;
+  }
+
+  .questao h3 {
+    font-size: clamp(0.95rem, 3vw, 1.05rem);
+    margin: 0 0 10px;
+    color: #111;
+  }
+
+  .mini-legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 0.78rem;
+    color: #555;
+    background: #f0f4f8;
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin-bottom: 14px;
+  }
+  .mini-legenda span { white-space: nowrap; }
+  .mini-legenda b { color: #0073bb; }
+
+  .opcao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 4px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .opcao:last-child { border-bottom: none; }
+
+  .opcao-texto {
+    flex: 1;
+    font-size: clamp(0.88rem, 2.5vw, 0.97rem);
+    line-height: 1.4;
+  }
+
+  .radios {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .radios label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 32px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1.5px solid #c5cdd6;
+    background: #fff;
+    color: #444;
+    transition: background 0.12s, border-color 0.12s, color 0.12s, opacity 0.12s;
+    user-select: none;
+  }
+
+  .radios label:hover:not(.disabled) { background: #deeeff; border-color: #0073bb; color: #0073bb; }
+  .radios label.selected { background: #0073bb; border-color: #0073bb; color: #fff; }
+  .radios label.disabled { opacity: 0.28; pointer-events: none; }
+  .radios input[type=radio] { display: none; }
+
+  .btn-resultado {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 8px auto 0;
+    padding: 13px;
+    font-size: 1rem;
+    font-weight: bold;
+    background: #0073bb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn-resultado:hover:not(:disabled) { background: #005f99; }
+  .btn-resultado:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .msg-progresso {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 0.88rem;
+    color: #2e7d32;
+  }
+
+  #resultado {
+    display: none;
+    margin-top: 28px;
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    padding: 20px 16px;
+  }
+
+  #resultado h2 { margin: 0 0 14px; font-size: 1.2rem; color: #0073bb; }
+
+  .totais {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .total-card {
+    background: #f0f7ff;
+    border: 1px solid #b3d4f0;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .total-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .total-card .nome { font-size: 0.85rem; font-weight: bold; color: #0073bb; margin-bottom: 6px; }
+  .total-card .valor { font-size: 2rem; font-weight: bold; color: #222; }
+  .total-card.destaque { background: #0073bb; border-color: #005f99; box-shadow: 0 4px 16px rgba(0,115,187,0.3); }
+  .total-card.destaque .nome, .total-card.destaque .valor { color: #fff; }
+  .total-card.ativo { outline: 3px solid #f9a825; }
+
+  .dica-cards { text-align: center; font-size: 0.8rem; color: #888; margin: 4px 0 14px; }
+
+  .descricao-sistema {
+    background: #f0f4f8;
+    border-left: 4px solid #0073bb;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .descricao-sistema h4 { margin: 0 0 8px; color: #0073bb; font-size: 0.95rem; }
+
+  .predominante {
+    background: #f1f8f1;
+    border: 1px solid #4caf50;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-size: 0.92rem;
+    color: #1b5e20;
+  }
+  .predominante strong { color: #2e7d32; }
+
+  .perfil-card { border: 1px solid #dde3ea; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; background: #fafcff; }
+  .perfil-card h3 { margin: 0 0 6px; font-size: 1rem; color: #0073bb; }
+  .perfil-card p { margin: 0 0 8px; font-size: 0.88rem; color: #444; line-height: 1.5; }
+  .perfil-card ul { margin: 0; padding-left: 16px; }
+  .perfil-card li { font-size: 0.85rem; margin: 4px 0; line-height: 1.45; }
+
+  .tag-forte { color: #2e7d32; font-weight: bold; }
+  .tag-fraco  { color: #c62828; font-weight: bold; }
+
+  @media (max-width: 480px) {
+    .radios label { width: 32px; height: 30px; font-size: 0.82rem; }
+    .opcao { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="lang-selector">
+  <a href="questoes.html">🇧🇷 Português</a>
+  <a href="questoes_en.html" class="active">🇬🇧 English</a>
+  <a href="questoes_nl.html">🇳🇱 Nederlands</a>
+</div>
+
+<h1>Discover your Representational System</h1>
+
+<form id="form">
+
+  <div class="questao" data-q="1">
+    <h3>1. I make important decisions based on:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = best describes you</span>
+      <span><b>3</b> = next best description</span>
+      <span><b>2</b> = next best</span>
+      <span><b>1</b> = least describes you</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q1_C"></div><span class="opcao-texto">intuition</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_A"></div><span class="opcao-texto">what sounds best to me</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_V"></div><span class="opcao-texto">what looks best to me</span></div>
+    <div class="opcao"><div class="radios" data-name="q1_D"></div><span class="opcao-texto">a precise and thorough study of the subject</span></div>
+  </div>
+
+  <div class="questao" data-q="2">
+    <h3>2. During a discussion I am most influenced by:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = best describes you</span>
+      <span><b>3</b> = next best description</span>
+      <span><b>2</b> = next best</span>
+      <span><b>1</b> = least describes you</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q2_A"></div><span class="opcao-texto">the other person's tone of voice</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_V"></div><span class="opcao-texto">whether or not I can see the other person's argument</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_D"></div><span class="opcao-texto">the logic of the other person's argument</span></div>
+    <div class="opcao"><div class="radios" data-name="q2_C"></div><span class="opcao-texto">whether or not I connect with the other person's real feelings</span></div>
+  </div>
+
+  <div class="questao" data-q="3">
+    <h3>3. I most easily communicate what is happening with me:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = best describes you</span>
+      <span><b>3</b> = next best description</span>
+      <span><b>2</b> = next best</span>
+      <span><b>1</b> = least describes you</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q3_V"></div><span class="opcao-texto">by the way I dress and appear</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_C"></div><span class="opcao-texto">through the feelings I share</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_D"></div><span class="opcao-texto">through the words I choose</span></div>
+    <div class="opcao"><div class="radios" data-name="q3_A"></div><span class="opcao-texto">through the tone of my voice</span></div>
+  </div>
+
+  <div class="questao" data-q="4">
+    <h3>4. It is very easy for me to:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = best describes you</span>
+      <span><b>3</b> = next best description</span>
+      <span><b>2</b> = next best</span>
+      <span><b>1</b> = least describes you</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q4_A"></div><span class="opcao-texto">find the ideal volume and tuning on a sound system</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_D"></div><span class="opcao-texto">select the most relevant point on an interesting subject</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_C"></div><span class="opcao-texto">choose the most comfortable furniture</span></div>
+    <div class="opcao"><div class="radios" data-name="q4_V"></div><span class="opcao-texto">choose the richest and most attractive color combinations</span></div>
+  </div>
+
+  <div class="questao" data-q="5">
+    <h3>5. I perceive myself as:</h3>
+    <div class="mini-legenda">
+      <span><b>4</b> = best describes you</span>
+      <span><b>3</b> = next best description</span>
+      <span><b>2</b> = next best</span>
+      <span><b>1</b> = least describes you</span>
+    </div>
+    <div class="opcao"><div class="radios" data-name="q5_A"></div><span class="opcao-texto">very in tune with the sounds of the environment</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_D"></div><span class="opcao-texto">very capable of reasoning with new facts and data</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_C"></div><span class="opcao-texto">very sensitive to the way clothes fit on my body</span></div>
+    <div class="opcao"><div class="radios" data-name="q5_V"></div><span class="opcao-texto">strongly responsive to colors and the appearance of a room</span></div>
+  </div>
+
+  <button type="button" class="btn-resultado" id="btnAcao" onclick="verResultado()" disabled>See Result</button>
+  <div id="erroMsg" class="msg-progresso">Answer all questions to see the result</div>
+
+</form>
+
+<div id="resultado">
+  <h2>Result</h2>
+  <div id="msgPredominante" class="predominante" style="display:none"></div>
+  <div class="totais">
+    <div class="total-card" id="card-C" onclick="mostrarDescricao('C')"><div class="nome">Kinesthetic</div><div class="valor" id="totalC">—</div></div>
+    <div class="total-card" id="card-A" onclick="mostrarDescricao('A')"><div class="nome">Auditory</div><div class="valor" id="totalA">—</div></div>
+    <div class="total-card" id="card-V" onclick="mostrarDescricao('V')"><div class="nome">Visual</div><div class="valor" id="totalV">—</div></div>
+    <div class="total-card" id="card-D" onclick="mostrarDescricao('D')"><div class="nome">Digital</div><div class="valor" id="totalD">—</div></div>
+  </div>
+  <p class="dica-cards">Click on the cards to see the characteristics of each system</p>
+  <div id="descricao-sistema" class="descricao-sistema" style="display:none"></div>
+</div>
+
+<script>
+const grupos = [
+  ['q1_C','q1_A','q1_V','q1_D'],
+  ['q2_A','q2_V','q2_D','q2_C'],
+  ['q3_V','q3_C','q3_D','q3_A'],
+  ['q4_A','q4_D','q4_C','q4_V'],
+  ['q5_A','q5_D','q5_C','q5_V']
+];
+
+const usados = { 0: new Set(), 1: new Set(), 2: new Set(), 3: new Set(), 4: new Set() };
+
+function buildRadios() {
+  document.querySelectorAll('.radios[data-name]').forEach(container => {
+    const name = container.dataset.name;
+    const qIdx = grupos.findIndex(g => g.includes(name));
+    [4, 3, 2, 1].forEach(val => {
+      const lbl = document.createElement('label');
+      lbl.dataset.val = val;
+      const inp = document.createElement('input');
+      inp.type = 'radio'; inp.name = name; inp.value = val;
+      lbl.addEventListener('click', e => { e.preventDefault(); onSelect(name, val, qIdx, lbl); });
+      lbl.appendChild(inp);
+      lbl.appendChild(document.createTextNode(val));
+      container.appendChild(lbl);
+    });
+  });
+}
+
+function onSelect(name, val, qIdx, selectedLbl) {
+  const inp = selectedLbl.querySelector('input');
+  const rowLabels = selectedLbl.parentElement.querySelectorAll('label');
+
+  if (inp.checked) {
+    inp.checked = false;
+    selectedLbl.classList.remove('selected');
+    usados[qIdx].delete(val);
+    updateDisabled(qIdx);
+    checkProgresso();
+    return;
+  }
+
+  rowLabels.forEach(lbl => {
+    if (lbl.classList.contains('selected')) {
+      usados[qIdx].delete(parseInt(lbl.dataset.val));
+      lbl.classList.remove('selected');
+      lbl.querySelector('input').checked = false;
+    }
+  });
+
+  inp.checked = true;
+  selectedLbl.classList.add('selected');
+  usados[qIdx].add(val);
+  updateDisabled(qIdx);
+  checkProgresso();
+}
+
+function updateDisabled(qIdx) {
+  grupos[qIdx].forEach(name => {
+    document.querySelector(`.radios[data-name="${name}"]`).querySelectorAll('label').forEach(lbl => {
+      const v = parseInt(lbl.dataset.val);
+      const checked = lbl.querySelector('input').checked;
+      lbl.classList.toggle('disabled', usados[qIdx].has(v) && !checked);
+    });
+  });
+}
+
+function verResultado() {
+  const erroEl = document.getElementById('erroMsg');
+  erroEl.textContent = '';
+  for (let i = 0; i < grupos.length; i++) {
+    for (const name of grupos[i]) {
+      if (!document.querySelector(`input[name="${name}"]:checked`)) {
+        erroEl.textContent = `Please answer all options for question ${i + 1}.`;
+        return;
+      }
+    }
+  }
+  const totais = { C: 0, A: 0, V: 0, D: 0 };
+  for (const grupo of grupos) {
+    for (const name of grupo) {
+      const letra = name.split('_')[1];
+      totais[letra] += parseInt(document.querySelector(`input[name="${name}"]:checked`).value);
+    }
+  }
+  const nomes = { C: 'Kinesthetic', A: 'Auditory', V: 'Visual', D: 'Digital' };
+  const maxVal = Math.max(...Object.values(totais));
+
+  document.querySelectorAll('.total-card').forEach(c => c.classList.remove('destaque'));
+  ['C','A','V','D'].forEach(l => {
+    const pct = totais[l] * 2;
+    document.getElementById('total'+l).textContent = pct + '%';
+    if (totais[l] === maxVal) document.getElementById('card-'+l).classList.add('destaque');
+  });
+
+  const predominantes = ['C','A','V','D'].filter(l => totais[l] === maxVal);
+  const nomesPredom = predominantes.map(l => nomes[l]);
+  const msg = document.getElementById('msgPredominante');
+  const verbo = predominantes.length > 1 ? 'are the predominant systems' : 'is the predominant system';
+  msg.innerHTML = '<strong>' + nomesPredom.join(' and ') + '</strong> ' + verbo + '.';
+  msg.style.display = 'block';
+
+  mostrarDescricao(predominantes[0]);
+
+  document.querySelectorAll('.radios label').forEach(lbl => {
+    lbl.style.pointerEvents = 'none';
+    if (!lbl.classList.contains('selected')) lbl.classList.add('disabled');
+  });
+
+  const btn = document.getElementById('btnAcao');
+  btn.disabled = false;
+  btn.textContent = 'Retake Test';
+  btn.onclick = refazerTeste;
+
+  const res = document.getElementById('resultado');
+  res.style.display = 'block';
+  res.scrollIntoView({ behavior: 'smooth' });
+}
+
+function refazerTeste() {
+  document.querySelectorAll('.radios label').forEach(lbl => {
+    lbl.classList.remove('selected', 'disabled');
+    lbl.style.pointerEvents = '';
+    lbl.querySelector('input').checked = false;
+  });
+  [0,1,2,3,4].forEach(i => usados[i].clear());
+
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('msgPredominante').style.display = 'none';
+  ['C','A','V','D'].forEach(l => {
+    document.getElementById('total'+l).textContent = '—';
+    document.getElementById('card-'+l).classList.remove('destaque');
+  });
+  document.getElementById('erroMsg').textContent = 'Answer all questions to see the result';
+  document.getElementById('descricao-sistema').style.display = 'none';
+
+  const btn = document.getElementById('btnAcao');
+  btn.textContent = 'See Result';
+  btn.disabled = true;
+  btn.onclick = verResultado;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+const descricoes = {
+  V: '<h4>Visual</h4>They perceive things as images and can move from one topic to another easily. They are capable of making generalizations quickly, even from scarce information. For visual people, the most important thing is the "general concept" and they may get bored with detailed explanations. They are good at organizing things since they quickly visualize the general concept. Visual people gesticulate when they speak, talk fast and in a somewhat confusing manner as they tend to follow their inner images without realizing that others do not see the same image. They respond briefly to questions. Visual people have photographic memory and often struggle to repeat oral instructions. They prefer to read for themselves rather than listen to someone else read to them. Visual people may have trouble debating and are an impatient audience. They like to write notes or draw. Visual people focus on appearance and value neatness.',
+  C: '<h4>Kinesthetic</h4>They perceive things through the body and experimentation. They are very intuitive and especially value the environment and participation. To think clearly they need movement and activity. They do not attach importance to the order of things. Kinesthetic people appear relaxed when speaking, move and gesticulate. They speak slowly and know how to use pauses. As an audience, they are impatient because they prefer to move to action. Kinesthetic people prefer activities and movement and pay attention to their development. Likewise, they require time to analyze what it feels like to do things. Kinesthetic people like to touch and get close to others. They easily notice uncomfortable environments and furniture as well as cold and heat. When speaking, kinesthetic people do not maintain much eye contact with others. To describe what they have done, they focus on the action. They learn best by doing things and remembering the feeling and the action. They occasionally walk and gesticulate to remember things.',
+  A: '<h4>Auditory</h4>They like to listen and tell stories, follow a logical procedure throughout each story and focus on one thing at a time. They do not like topics to be addressed in a disorganized way. Auditory people have a broad vocabulary, express themselves clearly and do not gesticulate much when speaking. Auditory people have their own way of speaking: they hear a question, repeat it in their head and answer it before responding out loud. This can bother visual and kinesthetic people who tend to be faster. Auditory people learn by listening and pay attention to emphasis, pauses and tone of voice. An auditory person enjoys silence.',
+  D: '<h4>Digital</h4>These are people who are moving, talking, and at the same time, talking to themselves. They tend to constantly self-analyze and weigh consequences for every decision. They have difficulty reading texts or books for a long period of time and when they manage to do so, they are constantly thinking about what they will do in the next minute. When you start paying attention to the signs, you notice that the digital auditory is listening and understanding, but at the same time their gaze drifts away at certain moments. At some moments they remain silent during negotiation.'
+};
+
+function mostrarDescricao(letra) {
+  document.querySelectorAll('.total-card').forEach(c => c.classList.remove('ativo'));
+  document.getElementById('card-' + letra).classList.add('ativo');
+  const el = document.getElementById('descricao-sistema');
+  el.innerHTML = descricoes[letra];
+  el.style.display = 'block';
+}
+
+function checkProgresso() {
+  const total = grupos.flat().length;
+  const respondidas = grupos.flat().filter(name => document.querySelector(`input[name="${name}"]:checked`)).length;
+  document.getElementById('btnAcao').disabled = respondidas < total;
+  document.getElementById('erroMsg').textContent = respondidas < total
+    ? 'Answer all questions to see the result'
+    : '';
+}
+
+buildRadios();
+</script>
+</body>
+</html>
